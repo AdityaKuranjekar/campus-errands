@@ -1,73 +1,132 @@
 <%- include('partials/header') %>
 
-<div class="page-header">
-    <h1>My <span>Tasks</span></h1>
-</div>
+<div style="padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1>My <span>Tasks</span></h1>
+    </div>
 
-<!-- Created by me -->
-<div style="margin-bottom: 2rem;">
-    <h2 style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:var(--text-secondary); letter-spacing:0.04em; text-transform:uppercase; margin-bottom:1rem;">
-        Created by me
-    </h2>
+    <!-- Created by me -->
+    <div style="margin-bottom: 2rem;">
+        <h2 style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:var(--text-secondary); letter-spacing:0.04em; text-transform:uppercase; margin-bottom:1rem;">
+            Created by me
+        </h2>
 
-    <% if (created.length === 0) { %>
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; color:var(--text-muted); font-size:14px;">
-            You haven't created any tasks yet.
-        </div>
-    <% } %>
-
-    <% created.forEach(t => { %>
-        <div class="task-card">
-            <div class="task-card-top">
-                <h5 class="task-title"><%= t.title %></h5>
-                <span class="task-bounty">₹<%= t.bounty %></span>
+        <% if (created.length === 0) { %>
+            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; color:var(--text-muted); font-size:14px;">
+                You haven't created any tasks yet.
             </div>
-            <div class="task-meta">
-                <%
-                    let sc = 'status-open';
-                    if (t.status === 'Claimed')   sc = 'status-claimed';
-                    if (t.status === 'Completed') sc = 'status-completed';
-                %>
-                <span class="status-badge <%= sc %>"><%= t.status %></span>
-                <% if (t.tasker) { %>
-                    <span class="meta-chip"><strong>Tasker:</strong> <%= t.tasker.username %></span>
-                <% } %>
-            </div>
-        </div>
-    <% }) %>
-</div>
+        <% } %>
 
-<!-- Accepted by me -->
-<div style="margin-bottom: 3rem;">
-    <h2 style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:var(--text-secondary); letter-spacing:0.04em; text-transform:uppercase; margin-bottom:1rem;">
-        Accepted by me
-    </h2>
+        <% created.forEach(task => { %>
+            <div class="task-card">
+                <div class="task-card-top">
+                    <h5 class="task-title"><%= task.title %></h5>
+                    <span class="task-bounty">₹<%= task.bounty %></span>
+                </div>
+                <p class="task-desc"><%= task.description %></p>
+                <div class="task-meta">
+                    <%
+                        let sc = 'status-open';
+                        if (task.status === 'Claimed')   sc = 'status-claimed';
+                        if (task.status === 'Completed') sc = 'status-completed';
+                    %>
+                    <span class="status-badge <%= sc %>"><%= task.status %></span>
+                    <span class="meta-chip">
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.6 3.4 9l.5-2.9L1.8 4l2.9-.4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                        <strong>Tasker:</strong> <%= task.tasker?.username || "Not assigned" %>
+                    </span>
+                </div>
 
-    <% if (accepted.length === 0) { %>
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; color:var(--text-muted); font-size:14px;">
-            You haven't claimed any tasks yet.
-        </div>
-    <% } %>
+                <div class="task-actions">
+                    <% if (task.status === 'Claimed' || task.status === 'Completed') { %>
+                        <% if (task.status === 'Claimed') { %>
+                            <span class="done-tag" style="background:var(--bg-surface); padding:7px 16px; border-radius:7px; border:1px solid var(--border);">Claimed</span>
+                        <% } %>
 
-    <% accepted.forEach(t => { %>
-        <div class="task-card">
-            <div class="task-card-top">
-                <h5 class="task-title"><%= t.title %></h5>
-                <span class="task-bounty">₹<%= t.bounty %></span>
+                        <% if (
+                            task.requester && task.tasker && userId &&
+                            String(task.requester._id) === String(userId)
+                        ) { %>
+                            <div class="contact-box">
+                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2h4l1.5 3.5-2 1.2a7.5 7.5 0 003.8 3.8l1.2-2L14 10v4a2 2 0 01-2 0C5.37 13.5.5 8.63.5 2a2 2 0 010-2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+                                <%= task.tasker.phone || "No phone available" %>
+                            </div>
+                        <% } %>
+
+                        <% if (task.status === 'Completed') { %>
+                            <span class="done-tag">
+                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-7" stroke="#22c97a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                Completed
+                            </span>
+                        <% } %>
+                    <% } %>
+                </div>
             </div>
-            <div class="task-meta">
-                <%
-                    let sa = 'status-open';
-                    if (t.status === 'Claimed')   sa = 'status-claimed';
-                    if (t.status === 'Completed') sa = 'status-completed';
-                %>
-                <span class="status-badge <%= sa %>"><%= t.status %></span>
-                <% if (t.requester) { %>
-                    <span class="meta-chip"><strong>By:</strong> <%= t.requester.username %></span>
-                <% } %>
+        <% }) %>
+    </div>
+
+    <!-- Accepted by me -->
+    <div style="margin-bottom: 3rem;">
+        <h2 style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:var(--text-secondary); letter-spacing:0.04em; text-transform:uppercase; margin-bottom:1rem;">
+            Accepted by me
+        </h2>
+
+        <% if (accepted.length === 0) { %>
+            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; color:var(--text-muted); font-size:14px;">
+                You haven't claimed any tasks yet.
             </div>
-        </div>
-    <% }) %>
+        <% } %>
+
+        <% accepted.forEach(task => { %>
+            <div class="task-card">
+                <div class="task-card-top">
+                    <h5 class="task-title"><%= task.title %></h5>
+                    <span class="task-bounty">₹<%= task.bounty %></span>
+                </div>
+                <p class="task-desc"><%= task.description %></p>
+                <div class="task-meta">
+                    <%
+                        let sa = 'status-open';
+                        if (task.status === 'Claimed')   sa = 'status-claimed';
+                        if (task.status === 'Completed') sa = 'status-completed';
+                    %>
+                    <span class="status-badge <%= sa %>"><%= task.status %></span>
+                    <span class="meta-chip">
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 10.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                        <strong>By:</strong> <%= task.requester?.username || "Unknown" %>
+                    </span>
+                </div>
+
+                <div class="task-actions">
+                    <% if (task.status === 'Claimed' || task.status === 'Completed') { %>
+                        <% if (task.status === 'Claimed') { %>
+                            <span class="done-tag" style="background:var(--bg-surface); padding:7px 16px; border-radius:7px; border:1px solid var(--border);">Claimed</span>
+                        <% } %>
+
+                        <% if (
+                            task.status === 'Claimed' &&
+                            task.tasker && userId &&
+                            String(task.tasker._id) === String(userId)
+                        ) { %>
+                            <form action="/tasks/<%= task._id %>/complete" method="POST">
+                                <button class="btn-action btn-complete" type="submit">
+                                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    Mark Complete
+                                </button>
+                            </form>
+                        <% } %>
+
+                        <% if (task.status === 'Completed') { %>
+                            <span class="done-tag">
+                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-7" stroke="#22c97a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                Completed
+                            </span>
+                        <% } %>
+                    <% } %>
+                </div>
+            </div>
+        <% }) %>
+    </div>
 </div>
 
 <%- include('partials/footer') %>

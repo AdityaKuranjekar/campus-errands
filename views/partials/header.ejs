@@ -369,17 +369,27 @@
 
 <nav class="site-nav">
     <div class="nav-inner">
-        <a href="/tasks" class="nav-brand">
+        <a href="/" class="nav-brand">
             <span class="nav-brand-dot"></span>
             Campus<span>Errands</span>
         </a>
         <div class="nav-links">
-            <a href="/tasks"     class="nav-link-item">All Tasks</a>
-            <a href="/tasks/new" class="nav-link-item">Create</a>
-            <a href="/mytasks"   class="nav-link-item">My Tasks</a>
-            <a href="/logout"    class="nav-link-logout">Logout</a>
+            <% if (currentUser) { %>
+                <a href="/tasks"     class="nav-link-item">Home</a>
+                <a href="/mytasks"   class="nav-link-item">My Tasks</a>
+                <a href="/tasks/new" class="nav-link-item">Create Task</a>
+                <a href="/logout"    class="nav-link-logout">Logout</a>
+            <% } else { %>
+                <a href="/login"     class="nav-link-item">Login</a>
+                <a href="/signup"    class="nav-link-item">Signup</a>
+            <% } %>
         </div>
     </div>
 </nav>
 
 <div class="page-content">
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div style="background: var(--danger-bg); border: 1px solid rgba(232, 80, 91, 0.3); color: var(--danger); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500;">
+            <%= error %>
+        </div>
+    <% } %>
