@@ -1,0 +1,73 @@
+<%- include('partials/header') %>
+
+<div class="page-header">
+    <h1>My <span>Tasks</span></h1>
+</div>
+
+<!-- Created by me -->
+<div style="margin-bottom: 2rem;">
+    <h2 style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:var(--text-secondary); letter-spacing:0.04em; text-transform:uppercase; margin-bottom:1rem;">
+        Created by me
+    </h2>
+
+    <% if (created.length === 0) { %>
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; color:var(--text-muted); font-size:14px;">
+            You haven't created any tasks yet.
+        </div>
+    <% } %>
+
+    <% created.forEach(t => { %>
+        <div class="task-card">
+            <div class="task-card-top">
+                <h5 class="task-title"><%= t.title %></h5>
+                <span class="task-bounty">₹<%= t.bounty %></span>
+            </div>
+            <div class="task-meta">
+                <%
+                    let sc = 'status-open';
+                    if (t.status === 'Claimed')   sc = 'status-claimed';
+                    if (t.status === 'Completed') sc = 'status-completed';
+                %>
+                <span class="status-badge <%= sc %>"><%= t.status %></span>
+                <% if (t.tasker) { %>
+                    <span class="meta-chip"><strong>Tasker:</strong> <%= t.tasker.username %></span>
+                <% } %>
+            </div>
+        </div>
+    <% }) %>
+</div>
+
+<!-- Accepted by me -->
+<div style="margin-bottom: 3rem;">
+    <h2 style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:600; color:var(--text-secondary); letter-spacing:0.04em; text-transform:uppercase; margin-bottom:1rem;">
+        Accepted by me
+    </h2>
+
+    <% if (accepted.length === 0) { %>
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; color:var(--text-muted); font-size:14px;">
+            You haven't claimed any tasks yet.
+        </div>
+    <% } %>
+
+    <% accepted.forEach(t => { %>
+        <div class="task-card">
+            <div class="task-card-top">
+                <h5 class="task-title"><%= t.title %></h5>
+                <span class="task-bounty">₹<%= t.bounty %></span>
+            </div>
+            <div class="task-meta">
+                <%
+                    let sa = 'status-open';
+                    if (t.status === 'Claimed')   sa = 'status-claimed';
+                    if (t.status === 'Completed') sa = 'status-completed';
+                %>
+                <span class="status-badge <%= sa %>"><%= t.status %></span>
+                <% if (t.requester) { %>
+                    <span class="meta-chip"><strong>By:</strong> <%= t.requester.username %></span>
+                <% } %>
+            </div>
+        </div>
+    <% }) %>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<%- include('partials/header') %>
+
+<div style="max-width: 440px; margin: 0 auto; padding-bottom: 3rem;">
+
+    <div class="page-header" style="padding-top:0;">
+        <h1>Create <span>Account</span></h1>
+    </div>
+
+    <div class="form-card">
+        <form method="POST">
+
+            <div class="form-group">
+                <label class="form-label-custom">Username</label>
+                <input name="username" class="form-input" placeholder="e.g. arjun_99" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label-custom">Email</label>
+                <input name="email" type="email" class="form-input" placeholder="you@college.edu" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label-custom">Password</label>
+                <input name="password" type="password" class="form-input" placeholder="Min. 8 characters" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label-custom">Phone Number</label>
+                <input name="phone" class="form-input" placeholder="+91 XXXXX XXXXX" required>
+            </div>
+
+            <button type="submit" class="btn-primary-custom" style="width:100%; justify-content:center; margin-top:0.5rem;">
+                Create Account
+            </button>
+
+        </form>
+    </div>
+
+    <p style="text-align:center; margin-top:1.25rem; font-size:14px; color:var(--text-muted);">
+        Already have an account?
+        <a href="/login" style="color:var(--accent); text-decoration:none; font-weight:500;">Login</a>
+    </p>
+
+</div>
+
+<%- include('partials/footer') %>
+
+</body>
+</html>

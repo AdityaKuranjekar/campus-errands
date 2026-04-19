@@ -1,0 +1,19 @@
+{
+  "name": "campuserrands",
+  "version": "1.0.0",
+  "description": "Campus Errands project",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.19.0",
+    "mongodb": "^7.1.1",
+    "mongoose": "^8.3.2"
+  }
+}

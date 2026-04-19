@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Task</title>
+</head>
+<body>
+
+<%- include('partials/header') %>
+
+<div class="page-header">
+    <h1>Create <span>Task</span></h1>
+</div>
+
+<div class="form-card">
+    <form action="/tasks" method="POST">
+
+        <div class="form-group">
+            <label class="form-label-custom">Title</label>
+            <input name="title" class="form-input" placeholder="e.g. Pick up notes from library" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label-custom">Description</label>
+            <textarea name="description" class="form-input" placeholder="Describe what needs to be done…"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label-custom">Bounty (₹)</label>
+            <input type="number" name="bounty" class="form-input" placeholder="e.g. 150">
+        </div>
+
+        <button type="submit" class="btn-primary-custom" style="margin-top: 0.5rem;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Create Task
+        </button>
+
+    </form>
+</div>
+
+<%- include('partials/footer') %>
+
+</body>
+</html>

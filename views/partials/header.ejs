@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Campus Errands</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base:       #080d1a;
+            --bg-surface:    #0e1628;
+            --bg-card:       #111c35;
+            --bg-card-hover: #152040;
+            --border:        #1e2f52;
+            --border-hover:  #2a4070;
+            --accent:        #3b7de8;
+            --accent-dim:    #1e4a9a;
+            --accent-glow:   rgba(59, 125, 232, 0.18);
+            --text-primary:  #e8eef8;
+            --text-secondary:#8fa3c8;
+            --text-muted:    #4d6490;
+            --success:       #22c97a;
+            --success-bg:    rgba(34, 201, 122, 0.1);
+            --warning:       #f5a623;
+            --warning-bg:    rgba(245, 166, 35, 0.1);
+            --danger:        #e8505b;
+            --danger-bg:     rgba(232, 80, 91, 0.1);
+            --blue-bg:       rgba(59, 125, 232, 0.1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Navbar ── */
+        .site-nav {
+            position: relative;
+            z-index: 10;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1rem;
+        }
+
+        .site-nav .nav-inner {
+            max-width: 780px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 58px;
+        }
+
+        .nav-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-brand span { color: var(--accent); }
+        .nav-brand:hover { color: var(--text-primary); text-decoration: none; }
+
+        .nav-brand-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-link-item {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 7px;
+            border: 1px solid transparent;
+            transition: color 0.15s, background 0.15s, border-color 0.15s;
+        }
+        .nav-link-item:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border-color: var(--border);
+            text-decoration: none;
+        }
+
+        .nav-link-logout {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--danger);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 7px;
+            border: 1px solid rgba(232, 80, 91, 0.3);
+            background: var(--danger-bg);
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+        .nav-link-logout:hover {
+            background: rgba(232, 80, 91, 0.18);
+            box-shadow: 0 0 10px rgba(232, 80, 91, 0.12);
+            color: var(--danger);
+            text-decoration: none;
+        }
+
+        /* ── Page content wrapper ── */
+        .page-content {
+            position: relative;
+            z-index: 1;
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2.5rem 1rem 0;
+        }
+
+        /* ── Shared button styles (used across pages) ── */
+        .btn-primary-custom {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 9px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+        }
+        .btn-primary-custom:hover {
+            background: #4d8ef0;
+            box-shadow: 0 0 16px var(--accent-glow);
+            transform: translateY(-1px);
+            color: #fff;
+            text-decoration: none;
+        }
+        .btn-primary-custom:active { transform: scale(0.97); }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 7px 16px;
+            border-radius: 7px;
+            border: 1px solid;
+            cursor: pointer;
+            transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+        }
+        .btn-action:active { transform: scale(0.97); }
+
+        .btn-claim {
+            background: var(--blue-bg);
+            color: var(--accent);
+            border-color: var(--accent-dim);
+        }
+        .btn-claim:hover {
+            background: rgba(59, 125, 232, 0.2);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .btn-complete {
+            background: var(--warning-bg);
+            color: var(--warning);
+            border-color: rgba(245, 166, 35, 0.35);
+        }
+        .btn-complete:hover {
+            background: rgba(245, 166, 35, 0.18);
+            box-shadow: 0 0 10px rgba(245, 166, 35, 0.15);
+        }
+
+        /* ── Task card (shared) ── */
+        .task-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.4rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s, background 0.2s, transform 0.15s;
+        }
+        .task-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+        .task-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.6rem;
+        }
+        .task-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .task-bounty {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--success);
+            white-space: nowrap;
+            background: var(--success-bg);
+            padding: 3px 10px;
+            border-radius: 6px;
+        }
+        .task-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0 0 1rem;
+            line-height: 1.6;
+        }
+        .task-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 10px;
+        }
+        .meta-chip strong { color: var(--text-secondary); font-weight: 500; }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-open    { background: var(--blue-bg);     color: var(--accent);  border: 1px solid var(--accent-dim); }
+        .status-open::before    { background: var(--accent); }
+        .status-claimed { background: var(--warning-bg);  color: var(--warning); border: 1px solid rgba(245,166,35,0.3); }
+        .status-claimed::before { background: var(--warning); }
+        .status-completed { background: var(--success-bg); color: var(--success); border: 1px solid rgba(34,201,122,0.3); }
+        .status-completed::before { background: var(--success); }
+        .contact-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--success-bg);
+            border: 1px solid rgba(34,201,122,0.25);
+            border-radius: 7px;
+            padding: 7px 12px;
+            font-size: 13px;
+            color: var(--success);
+            margin-bottom: 10px;
+        }
+        .done-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .task-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .task-card form { margin: 0; }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1.75rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        .page-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .page-header h1 span { color: var(--accent); }
+
+        /* ── Form styles ── */
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.75rem;
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label-custom {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 7px;
+            letter-spacing: 0.02em;
+        }
+        .form-input {
+            width: 100%;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            padding: 9px 13px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .form-input::placeholder { color: var(--text-muted); }
+        textarea.form-input { resize: vertical; min-height: 90px; }
+    </style>
+</head>
+
+<body>
+
+<nav class="site-nav">
+    <div class="nav-inner">
+        <a href="/tasks" class="nav-brand">
+            <span class="nav-brand-dot"></span>
+            Campus<span>Errands</span>
+        </a>
+        <div class="nav-links">
+            <a href="/tasks"     class="nav-link-item">All Tasks</a>
+            <a href="/tasks/new" class="nav-link-item">Create</a>
+            <a href="/mytasks"   class="nav-link-item">My Tasks</a>
+            <a href="/logout"    class="nav-link-logout">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="page-content">
