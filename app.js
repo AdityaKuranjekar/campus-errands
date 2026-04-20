@@ -1,8 +1,11 @@
+
+
 require("dotenv").config();
 
 console.log("MONGO URI:", process.env.MONGO_URI);
 
 const express = require('express');
+const cors = require("cors");
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
@@ -11,6 +14,8 @@ const User = require('./models/User');
 const Task = require('./models/Task');
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
 // ---------- MIDDLEWARE ----------
 app.use(express.urlencoded({ extended: true }));
