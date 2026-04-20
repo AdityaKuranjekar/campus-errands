@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+console.log("MONGO URI:", process.env.MONGO_URI);
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
@@ -12,6 +14,7 @@ const app = express();
 
 // ---------- MIDDLEWARE ----------
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(session({
     secret: 'secretkey',
@@ -42,15 +45,9 @@ function isLoggedIn(req, res, next) {
     next();
 }
 
+// ---------- ROOT ----------
 app.get('/', (req, res) => {
-    res.redirect('/login');
-});
-
-// ---------- HOME ROUTE ----------
-app.get('/', (req, res) => {
-    if (!req.session.userId) {
-        return res.redirect('/login');
-    }
+    if (!req.session.userId) return res.redirect('/login');
     res.redirect('/tasks');
 });
 
@@ -59,7 +56,7 @@ app.get('/me', (req, res) => {
     res.send(req.session.userId || "Not logged in");
 });
 
-// ---------- AUTH ROUTES ----------
+// ================== AUTH ROUTES ==================
 
 // signup page
 app.get('/signup', (req, res) => {
@@ -120,7 +117,129 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// ---------- TASK ROUTES ----------
+// ================== 🔥 API ROUTES ==================
+
+// API LOGIN (for mobile)
+app.post('/api/login', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+
+        if (!user) return res.status(400).json({ message: "User not found" });
+
+        const valid = await bcrypt.compare(req.body.password, user.password);
+
+        if (!valid) return res.status(400).json({ message: "Wrong password" });
+
+        res.json({
+            message: "Login successful",
+            userId: user._id,
+            username: user.username
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API SIGNUP
+app.post('/api/signup', async (req, res) => {
+    try {
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+        const user = new User({
+            username: req.body.username,
+            email: req.body.email,
+            password: hashedPassword,
+            phone: req.body.phone
+        });
+
+        await user.save();
+
+        res.json({ message: "User created successfully" });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API GET TASKS
+app.get('/api/tasks', async (req, res) => {
+    try {
+        const tasks = await Task.find()
+            .populate('requester')
+            .populate('tasker');
+
+        res.json(tasks);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API CREATE TASK
+app.post('/api/tasks', async (req, res) => {
+    try {
+        if (!req.body.title) {
+            return res.status(400).json({ message: "Title required" });
+        }
+
+        const task = new Task({
+            ...req.body
+        });
+
+        await task.save();
+
+        res.json({ message: "Task created", task });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API CLAIM TASK
+app.post('/api/tasks/:id/claim', async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id);
+
+        if (!task) return res.status(404).json({ message: "Task not found" });
+
+        if (task.status !== 'Open') {
+            return res.status(400).json({ message: "Already claimed" });
+        }
+
+        task.status = 'Claimed';
+        task.tasker = req.body.userId;
+
+        await task.save();
+
+        res.json({ message: "Task claimed" });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API COMPLETE TASK
+app.post('/api/tasks/:id/complete', async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id);
+
+        if (!task) return res.status(404).json({ message: "Task not found" });
+
+        task.status = 'Completed';
+
+        await task.save();
+
+        res.json({ message: "Task completed" });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ================== END API ==================
+
+// ================== WEB TASK ROUTES ==================
 
 // show create form
 app.get('/tasks/new', isLoggedIn, (req, res) => {
@@ -195,9 +314,7 @@ app.post('/tasks/:id/complete', isLoggedIn, async (req, res) => {
     try {
         const task = await Task.findById(req.params.id);
 
-        if (!task || !task.tasker) {
-            return res.redirect('/tasks');
-        }
+        if (!task || !task.tasker) return res.redirect('/tasks');
 
         if (String(task.tasker) !== String(req.session.userId)) {
             return res.redirect('/tasks');
@@ -229,6 +346,8 @@ app.get('/mytasks', isLoggedIn, async (req, res) => {
 });
 
 // ---------- START SERVER ----------
-app.listen(3000, () => {
-    console.log("Server running on 3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on ${PORT}`);
 });
