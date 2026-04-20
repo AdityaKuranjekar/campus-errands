@@ -351,3 +351,44 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`);
 });
+
+// ================== 🔥 FIX FOR ANDROID (UPDATE STATUS) ==================
+
+// API UPDATE TASK STATUS (for Android PUT)
+app.put('/api/tasks/:id', async (req, res) => {
+    try {
+        const { status, userId } = req.body;
+
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+
+        // If claiming task
+        if (status === "Claimed") {
+            if (task.status !== "Open") {
+                return res.status(400).json({ message: "Task already claimed" });
+            }
+
+            task.status = "Claimed";
+            task.tasker = userId || null;
+        }
+
+        // If completing task
+        if (status === "Completed") {
+            task.status = "Completed";
+        }
+
+        await task.save();
+
+        res.json({
+            message: "Task updated successfully",
+            task
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
