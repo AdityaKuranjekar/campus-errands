@@ -34,3 +34,8 @@ router.put("/tasks/:id", async (req, res) => {
 });
 
 module.exports = router;
+
+router.get("/api/tasks", async (req, res) => {
+  const tasks = await Task.find();
+  res.json(tasks);
+});
