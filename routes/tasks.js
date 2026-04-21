@@ -3,6 +3,21 @@ const router = express.Router();
 
 const Task = require("../models/Task");
 
+router.delete('/tasks/:id', async (req, res) => {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+        return res.status(404).send("Task not found");
+    }
+
+    if (task.status !== "Open") {
+        return res.send("Cannot delete accepted task");
+    }
+
+    await Task.findByIdAndDelete(req.params.id);
+    res.redirect('/');
+});
+
 // ✅ GET all tasks
 router.get("/tasks", async (req, res) => {
     try {

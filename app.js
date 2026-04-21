@@ -1,5 +1,7 @@
 
 
+
+
 require("dotenv").config();
 
 console.log("MONGO URI:", process.env.MONGO_URI);
@@ -12,6 +14,7 @@ const session = require('express-session');
 
 const User = require('./models/User');
 const Task = require('./models/Task');
+const { moderateTask } = require('./middleware/moderator');
 
 const app = express();
 app.use(cors());
@@ -20,6 +23,11 @@ app.use(express.json());
 // ---------- MIDDLEWARE ----------
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+
+
+const methodOverride = require('method-override');
+app.use(methodOverride('_method'));
 
 app.use(session({
     secret: 'secretkey',
@@ -181,11 +189,28 @@ app.get('/api/tasks', async (req, res) => {
     }
 });
 
+// 🛡️ API MODERATION CHECK (no DB write — pure decision)
+app.post('/api/tasks/moderate', (req, res) => {
+    const { title, description } = req.body;
+    const result = moderateTask(title, description);
+    res.json(result);
+});
+
 // API CREATE TASK
 app.post('/api/tasks', async (req, res) => {
     try {
         if (!req.body.title) {
             return res.status(400).json({ message: "Title required" });
+        }
+
+        // 🛡️ Academic Integrity Check
+        const modResult = moderateTask(req.body.title, req.body.description);
+        if (modResult.decision === 'BLOCK') {
+            return res.status(403).json({
+                blocked: true,
+                message: "🚫 Task can't be added due to academic integrity concerns.",
+                reason: modResult.reason
+            });
         }
 
         const task = new Task({
@@ -254,17 +279,24 @@ app.get('/tasks/new', isLoggedIn, (req, res) => {
 // create task
 app.post('/tasks', isLoggedIn, async (req, res) => {
     try {
+        // 🛡️ Content Moderation (profanity + academic integrity)
+        const modResult = moderateTask(req.body.title, req.body.description);
+        if (modResult.decision === 'BLOCK') {
+            const type = modResult.type === 'profanity' ? 'profanity' : '1';
+            return res.redirect(`/tasks/new?blocked=${type}`);
+        }
+
         const task = new Task({
             ...req.body,
             requester: req.session.userId
         });
 
         await task.save();
-        res.redirect('/tasks');
+        res.redirect('/tasks?flash=created');
 
     } catch (err) {
         console.log(err);
-        res.redirect('/tasks');
+        res.redirect('/tasks?error=Something went wrong. Try again.');
     }
 });
 
@@ -277,7 +309,9 @@ app.get('/tasks', isLoggedIn, async (req, res) => {
 
         res.render('index', {
             tasks,
-            userId: req.session.userId
+            userId: req.session.userId,
+            flash: req.query.flash || null,       // 'created'|'claimed'|'completed'|'deleted'
+            flashError: req.query.error || null   // error message string
         });
 
     } catch (err) {
@@ -297,6 +331,10 @@ app.post('/tasks/:id/claim', isLoggedIn, async (req, res) => {
             return res.redirect('/tasks?error=You cannot claim your own task');
         }
 
+        if (task.status === 'Completed') {
+            return res.redirect('/tasks?error=Task already completed and locked 🔒');
+        }
+
         if (task.status !== 'Open') {
             return res.redirect('/tasks?error=Task already claimed');
         }
@@ -306,7 +344,7 @@ app.post('/tasks/:id/claim', isLoggedIn, async (req, res) => {
 
         await task.save();
 
-        res.redirect('/tasks');
+        res.redirect('/tasks?flash=claimed');
 
     } catch (err) {
         console.log(err);
@@ -321,14 +359,19 @@ app.post('/tasks/:id/complete', isLoggedIn, async (req, res) => {
 
         if (!task || !task.tasker) return res.redirect('/tasks');
 
+        // 🔒 Already completed — locked
+        if (task.status === 'Completed') {
+            return res.redirect('/tasks?error=Task already completed and locked 🔒');
+        }
+
         if (String(task.tasker) !== String(req.session.userId)) {
-            return res.redirect('/tasks');
+            return res.redirect('/tasks?error=You are not the assigned tasker');
         }
 
         task.status = 'Completed';
         await task.save();
 
-        res.redirect('/tasks');
+        res.redirect('/tasks?flash=completed');
 
     } catch (err) {
         console.log(err);
@@ -352,6 +395,35 @@ app.get('/mytasks', isLoggedIn, async (req, res) => {
 
 // ---------- START SERVER ----------
 const PORT = process.env.PORT || 3000;
+
+app.delete("/tasks/:id", isLoggedIn, async (req, res) => {
+    try {
+        const taskId = req.params.id;
+
+        const task = await Task.findById(taskId);
+
+        if (!task) {
+            return res.redirect('/tasks?error=Task not found');
+        }
+
+        // 🔒 Completed tasks are permanently locked
+        if (task.status === 'Completed') {
+            return res.redirect('/tasks?error=Completed tasks cannot be deleted 🔒');
+        }
+
+        // 🔐 Only creator can delete
+        if (String(task.requester) !== String(req.session.userId)) {
+            return res.redirect('/tasks?error=You are not authorised to delete this task');
+        }
+
+        await Task.findByIdAndDelete(taskId);
+
+        res.redirect('/tasks?flash=deleted');
+    } catch (err) {
+        console.error(err);
+        res.redirect('/tasks?error=Server error. Please try again.');
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`);

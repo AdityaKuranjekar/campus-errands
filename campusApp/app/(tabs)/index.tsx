@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Task {
   _id: string;
   title: string;
   description: string;
-  bounty?: number; // Depending on backend it could be bounty or price
+  bounty?: number;
   price?: number;
 }
 
@@ -17,20 +16,23 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   const fetchTasks = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const response = await axios.get('https://campus-errands.onrender.com/api/tasks');
-      setTasks(response.data);
-    } catch (err) {
-      setError('Failed to fetch tasks.');
-      console.error(err);
-    } finally {
-      setLoading(false);
+      const res = await fetch("https://campus-errands.onrender.com/api/tasks");
+
+      if (!res.ok) {
+        throw new Error("Network response not ok");
+      }
+
+      const data = await res.json();
+      console.log("DATA:", data);
+
+      setTasks(data);
+    } catch (error) {
+      console.log("FETCH ERROR:", error);
+      setError("Failed to fetch tasks");
     }
   };
 
-  // Fetch tasks only when logged in
   useEffect(() => {
     if (isLoggedIn) {
       fetchTasks();
@@ -44,32 +46,35 @@ export default function App() {
       <View style={styles.taskContainer}>
         <Text style={styles.taskTitle}>{item.title}</Text>
         <Text style={styles.taskDescription}>{item.description}</Text>
-        <Text style={styles.taskBounty}>Bounty: ₹{bountyPrice !== undefined ? bountyPrice : 'N/A'}</Text>
+        <Text style={styles.taskBounty}>₹{bountyPrice ?? 'N/A'}</Text>
       </View>
     );
   };
 
+  // 🔐 FAKE LOGIN (FOR DEMO)
   if (!isLoggedIn) {
     return (
       <View style={styles.loginContainer}>
         <Text style={styles.loginTitle}>Campus Errands</Text>
-        <Text style={styles.loginSubtitle}>Sign in to view tasks</Text>
-        
-        <TextInput 
-          style={styles.input} 
-          placeholder="Email" 
-          placeholderTextColor="#888888" 
-          keyboardType="email-address"
-          autoCapitalize="none"
+        <Text style={styles.loginSubtitle}>Demo Login</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#888"
         />
-        <TextInput 
-          style={styles.input} 
-          placeholder="Password" 
-          placeholderTextColor="#888888" 
+
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#888"
           secureTextEntry
         />
-        
-        <TouchableOpacity style={styles.loginButton} onPress={() => setIsLoggedIn(true)}>
+
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => setIsLoggedIn(true)}
+        >
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
       </View>
@@ -80,14 +85,15 @@ export default function App() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Campus Errands</Text>
-        <TouchableOpacity style={styles.reloadButton} onPress={fetchTasks} disabled={loading}>
-          <Text style={styles.reloadButtonText}>{loading ? 'Loading...' : 'Reload'}</Text>
+
+        <TouchableOpacity onPress={fetchTasks}>
+          <Text style={{ color: "white" }}>Reload</Text>
         </TouchableOpacity>
       </View>
 
-      {loading && tasks.length === 0 ? (
+      {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#ffffff" />
+          <ActivityIndicator size="large" color="#fff" />
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
@@ -96,12 +102,9 @@ export default function App() {
       ) : (
         <FlatList
           data={tasks}
-          keyExtractor={(item, index) => item._id ? item._id.toString() : index.toString()}
+          keyExtractor={(item) => item._id}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>No tasks available right now.</Text>
-          }
+          contentContainerStyle={{ padding: 20 }}
         />
       )}
     </View>
@@ -109,84 +112,53 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  // Login Styles
   loginContainer: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#000',
     justifyContent: 'center',
     padding: 30,
   },
   loginTitle: {
-    color: '#ffffff',
-    fontSize: 32,
-    fontWeight: '900',
-    marginBottom: 5,
+    color: '#fff',
+    fontSize: 28,
     textAlign: 'center',
+    marginBottom: 10,
   },
   loginSubtitle: {
-    color: '#cccccc',
-    fontSize: 16,
-    marginBottom: 40,
+    color: '#aaa',
     textAlign: 'center',
+    marginBottom: 30,
   },
   input: {
     backgroundColor: '#1c1c1c',
-    color: '#ffffff',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderRadius: 12,
-    marginBottom: 20,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#2d2d2d',
+    color: '#fff',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
   },
   loginButton: {
     backgroundColor: '#00e676',
-    paddingVertical: 15,
-    borderRadius: 12,
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 10,
-    shadowColor: '#00e676',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
   },
   loginButtonText: {
-    color: '#000000',
-    fontSize: 18,
+    color: '#000',
     fontWeight: 'bold',
   },
-
-  // Task List Styles
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#000',
     paddingTop: 50,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    padding: 20,
   },
   headerTitle: {
-    color: '#ffffff',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  reloadButton: {
-    backgroundColor: '#333333',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  reloadButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
+    color: '#fff',
+    fontSize: 22,
   },
   centerContainer: {
     flex: 1,
@@ -194,46 +166,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: '#ff6b6b',
-    fontSize: 16,
-  },
-  listContent: {
-    padding: 20,
-    paddingBottom: 50,
+    color: 'red',
   },
   taskContainer: {
     backgroundColor: '#1c1c1c',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#2d2d2d',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 15,
   },
   taskTitle: {
-    color: '#ffffff',
-    fontSize: 22,
-    fontWeight: '900',
-    marginBottom: 8,
-  },
-  taskDescription: {
-    color: '#cccccc',
-    fontSize: 15,
-    marginBottom: 15,
-    lineHeight: 22,
-  },
-  taskBounty: {
-    color: '#00e676', // Bright green for bounty
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  emptyText: {
-    color: '#888888',
-    textAlign: 'center',
-    marginTop: 20,
+  taskDescription: {
+    color: '#aaa',
+    marginTop: 5,
+  },
+  taskBounty: {
+    color: '#00e676',
+    marginTop: 10,
+    fontWeight: 'bold',
   },
 });

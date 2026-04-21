@@ -1,41 +1,306 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Create Task</title>
+    <title>Create Task — Campus Errands</title>
+    <style>
+        /* ── Academic Integrity Block Banner ── */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse-shield {
+            0%, 100% { transform: scale(1);   filter: drop-shadow(0 0 8px #ff4d6d88); }
+            50%       { transform: scale(1.12); filter: drop-shadow(0 0 20px #ff4d6dcc); }
+        }
+        @keyframes scanline {
+            0%   { background-position: 0 0; }
+            100% { background-position: 0 100px; }
+        }
+
+        /* overlay */
+        #integrity-block {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(8, 8, 18, 0.92);
+            backdrop-filter: blur(14px);
+            align-items: center;
+            justify-content: center;
+            animation: slideDown 0.4s ease both;
+        }
+        #integrity-block.visible { display: flex; }
+
+        .block-modal {
+            background: linear-gradient(145deg, #1a0010, #12001e);
+            border: 1px solid #ff4d6d55;
+            border-radius: 20px;
+            padding: 2.8rem 2.4rem 2.2rem;
+            max-width: 460px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 60px #ff4d6d22, 0 0 120px #7f00ff11;
+            position: relative;
+            overflow: hidden;
+        }
+        /* scan-line effect */
+        .block-modal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 3px,
+                rgba(255,77,109,0.03) 3px,
+                rgba(255,77,109,0.03) 4px
+            );
+            pointer-events: none;
+            border-radius: 20px;
+        }
+
+        .block-shield {
+            font-size: 3.5rem;
+            margin-bottom: 0.6rem;
+            display: block;
+            animation: pulse-shield 2.2s ease-in-out infinite;
+            line-height: 1;
+        }
+
+        .block-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ff4d6d;
+            margin: 0.4rem 0 0.2rem;
+            letter-spacing: -0.01em;
+        }
+
+        .block-sub {
+            font-size: 0.78rem;
+            color: #ff4d6d99;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.2rem;
+        }
+
+        .block-message {
+            font-size: 0.97rem;
+            color: #e0b0bb;
+            line-height: 1.65;
+            border: 1px solid #ff4d6d33;
+            border-radius: 10px;
+            background: rgba(255,77,109,0.07);
+            padding: 0.9rem 1.1rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .block-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #ff4d6d;
+            background: rgba(255,77,109,0.12);
+            border: 1px solid #ff4d6d44;
+            border-radius: 999px;
+            padding: 0.3rem 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 1.6rem;
+        }
+
+        .block-actions { display: flex; gap: 0.75rem; justify-content: center; }
+
+        .block-btn-dismiss {
+            padding: 0.65rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #ff4d6d66;
+            background: rgba(255,77,109,0.14);
+            color: #ff4d6d;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .block-btn-dismiss:hover { background: rgba(255,77,109,0.26); border-color: #ff4d6d; }
+
+        .block-btn-back {
+            padding: 0.65rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: linear-gradient(135deg, #ff4d6d, #c9184a);
+            color: #fff;
+            transition: opacity 0.2s, transform 0.15s;
+        }
+        .block-btn-back:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* inline toast for pre-check */
+        #inline-block-msg {
+            display: none;
+            margin-bottom: 1rem;
+            background: rgba(255,77,109,0.1);
+            border: 1px solid #ff4d6d55;
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            font-size: 0.88rem;
+            color: #ff4d6d;
+            animation: slideDown 0.3s ease both;
+        }
+    </style>
 </head>
 <body>
 
 <%- include('partials/header') %>
 
+<!-- ===================== ACADEMIC INTEGRITY BLOCK OVERLAY ===================== -->
+<div id="integrity-block" class="<%= typeof query !== 'undefined' && query.blocked ? 'visible' : '' %>">
+    <div class="block-modal" role="alertdialog" aria-modal="true" aria-labelledby="block-title">
+
+        <span class="block-shield" aria-hidden="true">🛡️</span>
+
+        <div class="block-badge">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <circle cx="5" cy="5" r="4.5" stroke="#ff4d6d" stroke-width="1"/>
+                <path d="M5 3v2.5" stroke="#ff4d6d" stroke-width="1.2" stroke-linecap="round"/>
+                <circle cx="5" cy="7" r="0.6" fill="#ff4d6d"/>
+            </svg>
+            Academic Integrity Violation
+        </div>
+
+        <h2 class="block-title" id="block-title">Task Blocked</h2>
+        <p class="block-sub">Campus Errands Safety System</p>
+
+        <p class="block-message" id="block-message">
+            <!-- filled dynamically by JS -->
+        </p>
+
+        <div class="block-actions">
+            <button class="block-btn-dismiss" onclick="dismissBlock()">Edit Task</button>
+            <a href="/tasks" class="block-btn-back">← Back to Tasks</a>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== FORM ===================== -->
 <div class="page-header">
     <h1>Create <span>Task</span></h1>
 </div>
 
 <div class="form-card">
-    <form action="/tasks" method="POST">
+
+    <div id="inline-block-msg"></div>
+
+    <form id="task-form" action="/tasks" method="POST" onsubmit="return preCheck(event)">
 
         <div class="form-group">
-            <label class="form-label-custom">Title</label>
-            <input name="title" class="form-input" placeholder="e.g. Pick up notes from library" required>
+            <label class="form-label-custom" for="task-title">Title</label>
+            <input id="task-title" name="title" class="form-input"
+                   placeholder="e.g. Pick up notes from library" required autocomplete="off">
         </div>
 
         <div class="form-group">
-            <label class="form-label-custom">Description</label>
-            <textarea name="description" class="form-input" placeholder="Describe what needs to be done…"></textarea>
+            <label class="form-label-custom" for="task-desc">Description</label>
+            <textarea id="task-desc" name="description" class="form-input"
+                      placeholder="Describe what needs to be done…"></textarea>
         </div>
 
         <div class="form-group">
-            <label class="form-label-custom">Bounty (₹)</label>
-            <input type="number" name="bounty" class="form-input" placeholder="e.g. 150">
+            <label class="form-label-custom" for="task-bounty">Bounty (₹)</label>
+            <input id="task-bounty" type="number" name="bounty" class="form-input" placeholder="e.g. 150">
         </div>
 
-        <button type="submit" class="btn-primary-custom" style="margin-top: 0.5rem;">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <button id="submit-btn" type="submit" class="btn-primary-custom" style="margin-top: 0.5rem;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
             Create Task
         </button>
 
     </form>
 </div>
+
+<script>
+    const BLOCK_CONTENT = {
+        profanity: {
+            shield: '🚫',
+            badge: 'Inappropriate Language',
+            title: 'Language Not Allowed',
+            sub: 'Campus Errands Safety System',
+            msg: '<strong>Your task contains inappropriate language.</strong><br><br>Please keep your language respectful and professional. Abusive or offensive words are not allowed on this platform.'
+        },
+        academic: {
+            shield: '🛡️',
+            badge: 'Academic Integrity Violation',
+            title: 'Task Blocked',
+            sub: 'Campus Errands Integrity System',
+            msg: '⚠️ <strong>This task violates our Academic Integrity Policy.</strong><br><br>Tasks that involve completing assignments, homework, lab work, exams, or any other graded academic work <em>on behalf of another student</em> are strictly prohibited.'
+        }
+    };
+
+    function showBlock(type) {
+        const cfg = BLOCK_CONTENT[type] || BLOCK_CONTENT.academic;
+        document.querySelector('.block-shield').textContent = cfg.shield;
+        document.querySelector('.block-badge').innerHTML   = cfg.badge;
+        document.getElementById('block-title').textContent = cfg.title;
+        document.querySelector('.block-sub').textContent   = cfg.sub;
+        document.getElementById('block-message').innerHTML = cfg.msg;
+        document.getElementById('integrity-block').classList.add('visible');
+    }
+
+    // ── Show overlay if redirected back ─────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const blockedParam = params.get('blocked');
+    if (blockedParam === 'profanity') {
+        showBlock('profanity');
+    } else if (blockedParam) {
+        showBlock('academic');
+    }
+
+    function dismissBlock() {
+        document.getElementById('integrity-block').classList.remove('visible');
+        history.replaceState(null, '', window.location.pathname);
+    }
+
+    // ── Client-side pre-check via API ────────────────────────────────────────
+    async function preCheck(e) {
+        e.preventDefault();
+
+        const title = document.getElementById('task-title').value.trim();
+        const description = document.getElementById('task-desc').value.trim();
+        const btn = document.getElementById('submit-btn');
+        const inlineMsg = document.getElementById('inline-block-msg');
+
+        btn.disabled = true;
+        btn.textContent = 'Checking…';
+        inlineMsg.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/tasks/moderate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+
+            const data = await res.json();
+
+            if (data.decision === 'BLOCK') {
+                showBlock(data.type || 'academic');
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Create Task`;
+                return false;
+            } else {
+                document.getElementById('task-form').submit();
+            }
+        } catch (err) {
+            // Network error → fall through, server will also validate
+            document.getElementById('task-form').submit();
+        }
+    }
+</script>
 
 <%- include('partials/footer') %>
 
